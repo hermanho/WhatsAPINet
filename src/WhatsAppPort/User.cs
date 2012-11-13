@@ -10,7 +10,7 @@ namespace WhatsAppPort
     {
         public string PhoneNumber { get; private set; }
         public string UserName { get; private set; }
-        public WhatsUser WhatsUser { get; private set; }
+        public WhatsContact WhatsUser { get; private set; }
 
         public User(string phone, string name)
         {
@@ -20,14 +20,14 @@ namespace WhatsAppPort
 
         public static User UserExists(string phoneNum, string nickName)
         {
-            WhatsUserManager man = new WhatsUserManager();
-            var whatsUser = man.CreateUser(phoneNum, phoneNum);
+            WhatsContactsManager man = new WhatsContactsManager();
+            var whatsUser = man.CreateUserContact(phoneNum, phoneNum);
             var tmpUser = new User(phoneNum, nickName);
             tmpUser.SetUser(whatsUser);
             return tmpUser;
         }
 
-        public void SetUser(WhatsUser user)
+        public void SetUser(WhatsContact user)
         {
             if (this.WhatsUser != null)
                 return;

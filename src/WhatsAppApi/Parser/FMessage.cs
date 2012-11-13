@@ -24,7 +24,7 @@ namespace WhatsAppApi.Parser
         public DateTime? timestamp;
         public bool wants_receipt;
 
-        public WhatsAppApi.Account.WhatsUser User { get; private set; }
+        public WhatsAppApi.Account.WhatsContact User { get; private set; }
 
         public FMessage(Key key)
         {
@@ -33,7 +33,7 @@ namespace WhatsAppApi.Parser
             this.key = key;
         }
 
-        internal FMessage(WhatsAppApi.Account.WhatsUser remote_user, bool from_me)
+        internal FMessage(WhatsAppApi.Account.WhatsContact remote_user, bool from_me)
         {
             this.status = Status.Undefined;
             this.gap_behind = true;
@@ -54,7 +54,7 @@ namespace WhatsAppApi.Parser
             this.thumb_image = image;
             this.timestamp = new DateTime?(DateTime.Now);
         }
-        public FMessage(WhatsAppApi.Account.WhatsUser remote_user, string data, object image)
+        public FMessage(WhatsAppApi.Account.WhatsContact remote_user, string data, object image)
             : this(remote_user, true)
         {
             this.data = data;

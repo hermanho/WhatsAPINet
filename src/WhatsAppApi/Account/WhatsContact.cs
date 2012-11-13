@@ -6,13 +6,13 @@ using WhatsAppApi.Settings;
 
 namespace WhatsAppApi.Account
 {
-    public class WhatsUser
+    public class WhatsContact
     {
         private string serverUrl;
         public string Nickname { get; set; }
         public string Jid { get; private set; }
 
-        public WhatsUser(string jid, string srvUrl, string nickname = "")
+        public WhatsContact(string jid, string srvUrl, string nickname = "")
         {
             this.Jid = jid;
             this.Nickname = nickname;
@@ -22,6 +22,10 @@ namespace WhatsAppApi.Account
         public string GetFullJid()
         {
             return string.Format("{0}@{1}", this.Jid, this.serverUrl);
+        }
+
+        public bool IsGroup {
+            get { return this.serverUrl.Equals(WhatsConstants.WhatsGroupChat, StringComparison.OrdinalIgnoreCase); }
         }
 
         internal void SetServerUrl(string srvUrl)

@@ -43,8 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Account\WhatsUser.cs" />
-    <Compile Include="Account\WhatsUserManager.cs" />
+    <Compile Include="Account\WhatsContact.cs" />
+    <Compile Include="Account\WhatsContactsManager.cs" />
     <Compile Include="Helper\AccountInfo.cs" />
     <Compile Include="Helper\BinTreeNodeReader.cs" />
     <Compile Include="Helper\BinTreeNodeWriter.cs" />

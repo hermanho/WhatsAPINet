@@ -124,8 +124,8 @@ namespace WhatsTest
                                             }
                                         }) {IsBackground = true};
             thRecv.Start();
-            WhatsUserManager usrMan = new WhatsUserManager();
-            var tmpUser = usrMan.CreateUser(dst, "User");
+            WhatsContactsManager usrMan = new WhatsContactsManager();
+            var tmpUser = usrMan.CreateUserContact(dst, "User");
 
             while (true)
             {
