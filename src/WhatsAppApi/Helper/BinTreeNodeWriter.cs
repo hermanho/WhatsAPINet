@@ -364,7 +364,7 @@ namespace WhatsAppApi.Helper
                 // Replace non-printable characters with dots.
                 var s =
                     from c in debugMsg.ToCharArray()
-                    where !char.IsControl(c)
+                    where !char.IsControl(c) || c == '\t' || c == '\r' || c == '\n'
                     select c;
 
                 var str = new string(s.ToArray());
