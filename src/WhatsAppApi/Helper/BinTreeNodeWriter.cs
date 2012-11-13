@@ -12,7 +12,7 @@ namespace WhatsAppApi.Helper
         private Dictionary<string, int> tokenMap;
 
         //change to protocol 1.2
-        public byte[] Encryptionkey { get; set; }
+        public Encryption Encryption { get; set; }
 
         public BinTreeNodeWriter(string[] dict)
         {
@@ -116,9 +116,9 @@ namespace WhatsAppApi.Helper
             int len = data.Length;
 
             byte[] size = this.GetInt24(len);
-            if (encrypt && this.Encryptionkey != null)
+            if (encrypt && this.Encryption != null && this.Encryption.Key != null)
             {
-                data = Encryption.WhatsappEncrypt(Encryptionkey, data, true);
+                data = Encryption.WhatsappEncrypt(data, true);
                 len += 4;
                 size = this.GetInt24(len);
                 size[0] |= (1 << 4);
@@ -361,7 +361,15 @@ namespace WhatsAppApi.Helper
         {
             if (WhatsApp.DEBUG && debugMsg.Length > 0)
             {
-                Console.WriteLine(debugMsg);
+                // Replace non-printable characters with dots.
+                var s =
+                    from c in debugMsg.ToCharArray()
+                    where !char.IsControl(c)
+                    select c;
+
+                var str = new string(s.ToArray());
+
+                Console.WriteLine(str);
             }
         }
     }

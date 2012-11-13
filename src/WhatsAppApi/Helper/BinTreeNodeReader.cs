@@ -11,13 +11,13 @@ namespace WhatsAppApi.Helper
         //private string input;
 
         //change to protocol 1.2
-        public byte[] Encryptionkey { get; set; }
+        public Encryption Encryption { get; set; }
+        
         private List<byte> buffer;
 
         public BinTreeNodeReader(string[] dict)
         {
             this.dictionary = dict;
-            this.Encryptionkey = null;
         }
 
         //public ProtocolTreeNode nextTree(string pInput = null)
@@ -88,7 +88,7 @@ namespace WhatsAppApi.Helper
 
             bool isEncrypted = (stanzaFlag & 8) != 0;
 
-            if (isEncrypted && Encryptionkey != null)
+            if (isEncrypted && Encryption != null && Encryption.Key != null)
             {
                 decode(size);
             }
@@ -116,7 +116,7 @@ namespace WhatsAppApi.Helper
             Buffer.BlockCopy(data, 0, hashServerByte, 0, 4);
             Buffer.BlockCopy(data, 4, packet, 0, size - 4);
 
-            System.Security.Cryptography.HMACSHA1 h = new System.Security.Cryptography.HMACSHA1(this.Encryptionkey);
+            System.Security.Cryptography.HMACSHA1 h = new System.Security.Cryptography.HMACSHA1(this.Encryption.Key);
             byte[] hashByte = new byte[4];
             Buffer.BlockCopy(h.ComputeHash(packet, 0, packet.Length), 0, hashByte, 0, 4);
 
@@ -124,7 +124,7 @@ namespace WhatsAppApi.Helper
             if (hashServerByte.SequenceEqual(hashByte))
             {
                 this.buffer.RemoveRange(0, 4);
-                dataReal = Encryption.WhatsappDecrypt(this.Encryptionkey, packet);
+                dataReal = Encryption.WhatsappDecrypt(packet);
 
                 for (int i = 0; i < size - 4; i++)
                 {
@@ -471,7 +471,15 @@ namespace WhatsAppApi.Helper
         {
             if (WhatsApp.DEBUG && debugMsg.Length > 0)
             {
-                Console.WriteLine(debugMsg);
+                // Replace non-printable characters with dots.
+                var s =
+                    from c in debugMsg.ToCharArray()
+                    where !char.IsControl(c) && c != 0x07
+                    select c;
+
+                var str = new string(s.ToArray());
+
+                Console.WriteLine(str);
             }
         }
     }

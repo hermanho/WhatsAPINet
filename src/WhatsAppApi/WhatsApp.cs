@@ -49,9 +49,16 @@ namespace WhatsAppApi
         private byte[] _challengeBytes;
         private List<IncompleteMessageException> _incompleteBytes;
 
+        private Encryption encryption;
+
+        public bool AcknowledgeMessages { get; set; }
+
+
         //array("sec" => 2, "usec" => 0);
         public WhatsApp(string phoneNum, string imei, string nick, bool debug = false)
         {
+            AcknowledgeMessages = true;
+
             this.messageQueue = new List<ProtocolTreeNode>();
             //this.sysEncoding = Encoding.GetEncoding("ISO-8859-1");
             //this.challengeArray = new Dictionary<string, string>();
@@ -190,7 +197,16 @@ namespace WhatsAppApi
 
         public void PollMessages()
         {
-            this.processInboundData(this.whatsNetwork.ReadData());
+            byte[] data = this.whatsNetwork.ReadData();
+
+            // Data is null. There was a timeout. For now, when this occurs
+            // we'll just go on.
+            if (data == null)
+            {
+                Console.Error.WriteLine("T/O");
+            }
+           
+            this.processInboundData(data);
         }
 
         public void Pong(string msgid)
@@ -256,8 +272,12 @@ namespace WhatsAppApi
 
             Rfc2898DeriveBytes r = new Rfc2898DeriveBytes(this.encryptPassword(), _challengeBytes, 16);
             this._encryptionKey = r.GetBytes(20);
-            this.reader.Encryptionkey = _encryptionKey;
-            this.writer.Encryptionkey = _encryptionKey;
+
+            // We now should have enough information to initialize the encryption engine
+            encryption = new Encryption(this._encryptionKey);
+
+            this.reader.Encryption = encryption;
+            this.writer.Encryption = encryption;
 
             List<byte> b = new List<byte>();
             b.AddRange(WhatsApp.SYSEncoding.GetBytes(this.phoneNumber));
@@ -266,7 +286,7 @@ namespace WhatsAppApi
 
             byte[] data = b.ToArray();
 
-            byte[] response = Encryption.WhatsappEncrypt(_encryptionKey, data, false);
+            byte[] response = encryption.WhatsappEncrypt(data, false);
             var node = new ProtocolTreeNode("response",
                 new KeyValue[] { new KeyValue("xmlns", "urn:ietf:params:xml:ns:xmpp-sasl") },
                 response);
@@ -394,7 +414,9 @@ namespace WhatsAppApi
                     if (ProtocolTreeNode.TagEquals(node,"message"))
                     {
                         this.AddMessage(node);
-                        this.sendMessageReceived(node);
+
+                        if(AcknowledgeMessages)
+                            this.sendMessageReceived(node);
                     }
                     if (ProtocolTreeNode.TagEquals(node,"stream:error"))
                     {

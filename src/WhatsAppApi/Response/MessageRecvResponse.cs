@@ -9,7 +9,7 @@ using WhatsAppApi.Settings;
 
 namespace WhatsAppApi.Response
 {
-    class MessageRecvResponse
+    public class MessageRecvResponse
     {
         private WhatsSendHandler sendHandler;
 

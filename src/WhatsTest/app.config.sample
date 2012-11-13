@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<configuration>
+<!--<startup><supportedRuntime version="v3.0" sku=".NETFramework,Version=v3.0"/></startup>-->
+  
+  <appSettings>
+    
+    <!-- The following contains the phone number, preceded by the country code, with no preceding spaces, plus signs, or zeros -->
+    <add key="phone" value="3412345665"/>
+    
+    <!-- Here goes the (non-hashed) password. This will generally be the IMEI number. -->
+    <add key="imei" value="3524123412344"/>
+    
+    <!-- Here goes the nickname. -->
+    <add key="nickname" value="TestNickname"/>
+    
+  </appSettings>
+</configuration>

@@ -11,37 +11,92 @@ using System.Threading;
 using WhatsAppApi;
 using WhatsAppApi.Account;
 using WhatsAppApi.Register;
+using System.Configuration;
+using System.IO;
 
 namespace WhatsTest
 {
     internal class Program
     {
+
+        /// <summary>
+        /// Reads the nickname from the app.config file.
+        /// </summary>
+        /// <returns>Nickname</returns>
+        private static string ReadNickname()
+        {
+            string nickname = ConfigurationManager.AppSettings["nickname"];
+            if (nickname == null)
+            {
+                string errmsg = "Could not read nickname from app.config file. Check that both the file and the variable exist.";
+                Console.Error.WriteLine(errmsg);
+                throw new FileNotFoundException(errmsg);
+            }
+            return nickname;
+        }
+
+        /// <summary>
+        /// Reads the IMEI number from the app.config file.
+        /// </summary>
+        /// <returns>IMEI number</returns>
+        private static string ReadIMEI()
+        {
+            string imei = ConfigurationManager.AppSettings["imei"];
+            if (imei == null)
+            {
+                string errmsg = "Could not read imei from app.config file. Check that both the file and the variable exist.";
+                Console.Error.WriteLine(errmsg);
+                throw new FileNotFoundException(errmsg);
+            }
+            return imei;
+        }
+
+        /// <summary>
+        /// Reads the phone number from the app.config file.
+        /// The number should include the country code, but not the plus sign, nor the
+        /// zero preffix.
+        /// </summary>
+        /// <returns>Phone</returns>
+        private static string ReadPhone()
+        {
+            string phone = ConfigurationManager.AppSettings["phone"];
+            if (phone == null)
+            {
+                string errmsg = "Could not read phone from app.config file. Check that both the file and the variable exist.";
+                Console.Error.WriteLine(errmsg);
+                throw new FileNotFoundException(errmsg);
+            }
+            return phone;
+        }
+
         private static void Main(string[] args)
         {
             var tmpEncoding = Encoding.UTF8;
             System.Console.OutputEncoding = Encoding.Default;
             System.Console.InputEncoding = Encoding.Default;
-            string nickname = "WhatsAPI Test";
-            //string sender = ""; // Mobile number with country code (but without + or 00)
-            //string imei = ""; // MAC Address for iOS IMEI for other platform (Android/etc) 
 
-            //WhatsApp wa = new WhatsApp(sender, imei, nickname, true);
+            string nickname = ReadNickname();
+            string sender = ReadPhone(); // Mobile number with country code (but without + or 00)
+            string imei = ReadIMEI(); // MAC Address for iOS IMEI for other platform (Android/etc) 
 
-            //string countrycode = sender.Substring(0, 2);
-            //string phonenumber = sender.Remove(0, 2);
+            WhatsApp wa = new WhatsApp(sender, imei, nickname, true);
 
-            //if (!WhatsRegister.ExistsAndDelete(countrycode, phonenumber, imei))
-            //{
-            //    PrintToConsole("Wrong Password");
-            //    return;
-            //}
+            string countrycode = sender.Substring(0, 2);
+            string phonenumber = sender.Remove(0, 2);
 
-            //wa.Connect();
-            //wa.Login();
-            //wa.sendNickname("test");
+            if (!WhatsRegister.ExistsAndDelete(countrycode, phonenumber, imei))
+            {
+                PrintToConsole("Wrong Password");
+                return;
+            }
 
-            //ProcessChat(wa, "");
-            RegisterAccount();
+            wa.Connect();
+            wa.Login();
+            wa.sendNickname("test");
+
+            ProcessChat(wa, "");
+            
+            //RegisterAccount();
 
             Console.ReadKey();
         }

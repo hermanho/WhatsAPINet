@@ -13,18 +13,19 @@ namespace WhatsAppApi
         private readonly string whatsHost;
         private readonly int whatsPort;
 
-        //private string incomplete_message = "";
         private List<byte> incomplete_message = new List<byte>();
         private Socket socket;
-        //private BinTreeNodeWriter binWriter;
+
+        public bool SocketStatus
+        {
+            get { return socket.Connected; }
+        }
 
         public WhatsNetwork(string whatsHost, int port, int timeout = 2000)
-        //public WhatsNetwork(string whatsHost, int port, BinTreeNodeWriter writer, int timeout = 2000)
         {
             this.recvTimeout = timeout;
             this.whatsHost = whatsHost;
             this.whatsPort = port;
-            //this.binWriter = writer;
             this.incomplete_message = new List<byte>();
         }
 
@@ -33,10 +34,6 @@ namespace WhatsAppApi
             this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.socket.Connect(this.whatsHost, this.whatsPort);
             this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, this.recvTimeout);
-            
-            //var tmpNetStream = new NetworkStream(this.socket);
-            //this.streamReader = new StreamReader(tmpNetStream);
-            //this.streamWriter = new StreamWriter(tmpNetStream);
 
             if (!this.socket.Connected)
                 throw new ConnectionException("Cannot connect");
@@ -48,81 +45,36 @@ namespace WhatsAppApi
                 this.socket.Disconnect(true);
         }
 
-        //public string ReadData()
-        //{
-        //    string buff = "";
-        //    string ret = Socket_read(1024);
-        //    if (ret != null)
-        //    {
-        //        buff = this.incomplete_message + ret;
-        //        this.incomplete_message = "";
-        //    }
-        //    return buff;
-        //}
         public byte[] ReadData()
         {
             List<byte> buff = new List<byte>();
-            byte[] ret = Socket_read(1024);
-            //if (ret != null)
-            //{
-            //    buff.AddRange(this.incomplete_message);
-            //    buff.AddRange(ret);
-            //    this.incomplete_message = new List<byte>();
-            //}
-            //return buff.ToArray();
+            byte[] ret = SocketRecv(1024);
             return ret;
         }
 
         public void SendData(string data)
         {
-            Socket_send(data, data.Length, 0);
+            SocketSend(data, data.Length, 0);
         }
         public void SendData(byte[] data)
         {
-            Socket_send(data);
+            SocketSend(data);
         }
 
-        //public void SendNode(ProtocolTreeNode node)
-        //{
-        //    //this.DebugPrint(node.NodeString("SENT: "));
-        //    this.SendData(this.binWriter.Write(node));
-        //}
-
-        //private string Socket_read(int length)
-        //{
-        //    if (!socket.Connected)
-        //    {
-        //        throw new System.IO.IOException("Disconnected");
-        //    }
-
-        //    var buff = new byte[length];
-        //    int receiveLength = 0;
-        //    try
-        //    {
-        //        receiveLength = socket.Receive(buff, 0, length, 0);
-        //    }
-        //    catch (SocketException excpt)
-        //    {
-        //        if (excpt.SocketErrorCode == SocketError.TimedOut)
-        //        {
-        //            Console.WriteLine("Socket-Timout");
-        //            return null;
-        //        }
-        //        else
-        //        {
-        //            Console.WriteLine("Unbehandelter Fehler bei Sockerread: {0}", excpt);
-        //            throw excpt;
-        //        }
-        //    }
-
-        //    string tmpRet = this.sysEncoding.GetString(buff);
-        //    return tmpRet;
-        //}
-        private byte[] Socket_read(int length)
+        /// <summary>
+        /// Receives the specified number of bytes.
+        /// </summary>
+        /// <param name="length">Number of bytes to receive at most.</param>
+        /// <returns>A byte array containing bytes read.</returns>
+        /// <remarks>If the connection is closed by the remote end, or if any error occurs, 
+        /// a ConnectionException is thrown.</remarks>
+        private byte[] SocketRecv(int length)
         {
             if (!socket.Connected)
             {
-                throw new ConnectionException();
+                string msg = "WhatsNetwork exception: Socket is not connected";
+                Console.Error.WriteLine(msg);
+                throw new ConnectionException(msg);
             }
 
             var buff = new byte[length];
@@ -132,19 +84,28 @@ namespace WhatsAppApi
                 try
                 {
                     receiveLength = socket.Receive(buff, 0, length, 0);
+
+                    // If it returns zero, the other end has closed
+                    // the connection.
+                    if (receiveLength == 0)
+                    {
+                        socket.Close();
+                        string msg = "WhatsNetwork exception: Remote end closed the connection";
+                        Console.Error.WriteLine(msg);
+                    }
                 }
                 catch (SocketException excpt)
                 {
                     if (excpt.SocketErrorCode == SocketError.TimedOut)
                     {
-                        Console.WriteLine("Socket-Timout");
-                        //throw new ConnectionException("Timeout", excpt);
+                        string msg = "WhatsNetwork: Receive operation timed out";
+                        Console.Error.WriteLine(msg);
                         return null;
                     }
                     else
                     {
-                        Console.WriteLine("Unbehandelter Fehler bei Sockerread: {0}", excpt);
-                        throw new ConnectionException("error", excpt);
+                        Console.WriteLine("WhatsNetwork: Receive operation failed: {0}", excpt);
+                        throw new ConnectionException("WhatsNetwork: Receive operation failed.", excpt);
                     }
                 }
             } while (receiveLength <= 0);
@@ -152,22 +113,20 @@ namespace WhatsAppApi
             byte[] tmpRet = new byte[receiveLength];
             if (receiveLength > 0)
                 Buffer.BlockCopy(buff, 0, tmpRet, 0, receiveLength);
+
             return tmpRet;
         }
 
-        private void Socket_send(string data, int length, int flags)
+        private void SocketSend(string data, int length, int flags)
         {
             var tmpBytes = WhatsApp.SYSEncoding.GetBytes(data);
             this.socket.Send(tmpBytes);
         }
-        private void Socket_send(byte[] data)
+
+        private void SocketSend(byte[] data)
         {
             this.socket.Send(data);
         }
 
-        public bool SocketStatus
-        {
-            get { return socket.Connected; }
-        }
-    }
-}
+    } //! class
+} //! namespace
